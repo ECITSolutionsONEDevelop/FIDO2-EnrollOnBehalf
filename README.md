@@ -1,145 +1,129 @@
+# FIDO2 Bulk Enrollment Tool for Microsoft Entra ID
 
-# FIDO2 Key Registration Tool for Microsoft Entra ID
-
-This tool streamlines the process of registering FIDO2 security keys in **Microsoft Entra ID** by leveraging the FIDO2 Provisioning Graph API. It supports features like setting random PINs, managing keys, and logging results, all through a user-friendly graphical interface.
+A GUI tool for bulk enrolling FIDO2 security keys on behalf of users in **Microsoft Entra ID**. Uses direct credential creation via `fido2-cred2.exe` for fast enrollment, bypassing the Windows Hello interface entirely. Supports both USB and NFC keys.
 
 ## Features
 
-- **Entra ID Integration**: Fully supports the FIDO2 Provisioning Graph API for seamless key registration.
-- **Random PINs**: Generate random 6-digit custom PINs for FIDO2 keys.
-- **Custom PINs**: A custom Pin can be set in the first line of the script.
-- **Forced PIN Change**: Option to enforce PIN change after provisioning.
-- **Clipboard Integration**: Automatically copies generated PINs to the clipboard for quick use.
-- **Error Handling**: Provides clear prompts for errors and guides the user to resolve them.
-- **Detailed Logging**: Logs all operations in a `.log` file for easy reference. 
+- **Interactive GUI** with user search, Entra ID integration, and real-time enrollment status
+- **Entra ID user search** - search users by name or UPN directly from the tool instead of CSV files
+- **USB and NFC support** - automatic device detection with NFC-specific guidance
+- **Device code authentication** - reliable sign-in flow for admin accounts, auto-detected when running elevated
+- **Random PIN generation** - configurable length (4-12 digits) with complexity checks (no sequential, repeated, or palindromic PINs)
+- **Force PIN change** - option to require PIN change on first use (FIDO2.1 Final keys only)
+- **Existing key detection** - warns before enrolling if the user already has FIDO2 keys registered
+- **PIN confirmation** - after enrollment, displays the PIN prominently and requires admin acknowledgement before continuing
+- **Key management** - wipe FIDO2 keys from Entra ID (select individual keys or all), with link to Windows Settings for physical key reset
+- **JSON configuration** - settings saved to `%APPDATA%\FIDO2BulkEnroll\config.json` (tenant, PIN options, log preferences)
+- **Optional CSV logging** - log enrollments to file (can be disabled)
 
 ## Prerequisites
 
-### Required Hardware
-- Compatible **FIDO2.1 key**:
-  - Keys with FIDO2.1 Final firmware are required for setting and forcing PIN changes.
-  - Serial number retrieval is supported only with the **PIN+ series** keys.
+### Hardware
+- Compatible **FIDO2 key** (FIDO2.0 or later)
+  - FIDO2.1 Final firmware required for force PIN change feature
+  - Serial number auto-read supported with **PIN+ series** keys via USB only
+- For NFC enrollment: a PC/SC-compatible NFC reader (e.g. HID OMNIKEY 5022 CL)
 
-### Required Software
-- **PowerShell**: Version 5.1 or later.
-- **Modules**: 
+### Software
+- **PowerShell** 5.1 or later (PowerShell 7 recommended)
+- **Modules** (installed automatically if missing):
   - `Microsoft.Graph`
-  - `DSInternals.PassKeys` (The script will automatically install these modules if not already present.)
+  - `DSInternals.PassKeys`
 
 ### Required Files
-Ensure the following files are included in the archive:
-- `read_serial_t2.exe`: Utility to read the serial number of FIDO keys.
-- `fido2-manage.exe`: Tool to manage FIDO2 keys, spefifically to set the FIDO2-PIN bypassing Windows Hello.
-- `libfido2-ui.exe`: Dependency of `fido2-manage.exe`.
-- `fido2-cred2.exe`: Tool to create credentials directly on FIDO keys, compiled for NFC support to bypass Windows Hello.
-
-### Input File
-A CSV file containing user information. The file must include a column named `UPN` (User Principal Name).
+These must be in the same directory as the script:
+- `fido2-cred2.exe` - creates credentials directly on FIDO keys (compiled with NFC support)
+- `fido2-manage.exe` - sets PIN and forces PIN change on FIDO2 keys
+- `libfido2-ui.exe` - dependency for device enumeration
+- `read_serial_t2.exe` - reads serial numbers from PIN+ series keys (USB only)
 
 ### Permissions
-- Run the script as **Administrator** (required due to Windows FIDO2 Native API limitations).
-- The Entra account used must have the following **Graph API permissions**:
-  - `UserAuthenticationMethod.ReadWrite.All`
+The Entra ID account used must have:
+- `UserAuthenticationMethod.ReadWrite.All` - for enrolling and managing FIDO2 keys
+- `User.Read.All` - for searching users in Entra ID
 
-### Additional Notes
-If your Entra account is FIDO2/Passkey-protected, follow these steps:
-1. Log in to an application like Microsoft Teams (even if unlicensed).
-2. Choose the option **"Sign in to all your apps"**.
-3. This will add your credentials to the session, allowing you to select the logged-in account when running the script.
-4. The latest update of `read_serial_t2.exe` also allows you to disable or enable the HID functionality of the key using the `-hid 0` or `-hid 1` option. Please note that HID is used for TOTP functionality with companion apps over USB, so only disable it (`-hid 0`) if you do not intend to use the TOTP feature of the key.. 
+## Usage
 
-## Using the Tool
-
-1. **Run the Script**:
-   Execute `EnrollFIDO2.ps1` or `EnrollFIDO2_fido2-cred.ps1` in PowerShell. Ensure the **execution policy** allows script execution. You can enable this by running:
-   ```powershell
-   Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
-   ```
-   A graphical interface will appear.
-   If you modify the script e.g. by modifying the PIN, you will need to use `Bypass` instead of `RemoteSigned`
-
-2. **Configure Tenant ID**:
-   Enter your **Tenant ID** (e.g., `tenantname.onmicrosoft.com`). The tool will auto-detect the Tenant ID if available in the registry.
-
-3. **Select the Input File**:
-   Click "Select File" and choose a valid CSV file containing user UPNs. (it defaults to `users.csv` in the script's own directory)
-
-4. **Set PIN Options**:
-   - **Random PIN**: Generates a random 6-digit PIN for each key.
-   - **Copy PIN to Clipboard**: Copies the generated PIN to the clipboard.
-   - **Force PIN Change**: Enforces PIN change on the key.
-
-5. **Set Log File Path**:
-   Specify where the log file should be saved.
-
-6. **Register Keys**:
-   Click "Proceed" to start the registration process. The tool will:
-   - Read the FIDO key serial number.
-   - Optionally set a random PIN, otherwise `123457` will be set (or a previously chosen custom PIN).
-   - Directly create the credential on the FIDO key for each user, bypassing the Windows Hello Interface
-     - For fastest results, use an NFC reader as user presence is resolved by putting the FIDO key on the NFC reader, therefore no need to touch the touch area of the key.
-   - Register the FIDO key for each user via the Graph API.
-   - Log the results.
-
-## Sample Log File
-
-Here is an example of the log file content (formatted as CSV but saved with a `.log` extension to differentiate it from the user list file):
-
-```plaintext
-Date: 2024-11-28 12:34:56
-------------------------------------------------------------
-UPN, Serial Number, PIN, Forced PIN Change
-john.doe@domain.com, 1234567890, 789012, Yes
-jane.smith@domain.com, 0987654321, 456789, No
-------------------------------------------------------------
+### 1. Launch the Tool
+```powershell
+.\EnrollFIDO2_GUI.ps1
+```
+If the execution policy blocks the script:
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Bypass
 ```
 
-Handle this log file carefully, as it contains sensitive information such as PINs. Please note that this will contain only successfully provisioned account information, not errors or failures. 
+### 2. Configure and Sign In
+- Enter your **Tenant ID** (e.g. `contoso.onmicrosoft.com` or tenant GUID)
+- Click **Sign In** - uses device code authentication when running as Administrator (browser auth when not elevated)
+- The device code flow shows a dialog with the code and URL; sign in with your admin account in any browser
 
-## Difference Between `EnrollFIDO2.ps1` and `EnrollFIDO2_fido2-cred.ps1`
+### 3. Select a User
+Either:
+- **Type the UPN** directly in the UPN field, or
+- **Search Entra ID** by name or email, then click a result to populate the UPN
 
-Both scripts are used to provision FIDO2 credentials on security keys, but they differ in their approach and user interaction requirements.
+### 4. Enroll a Key
+- Click **Enroll Key**
+- If the user already has FIDO2 keys, you'll be warned and asked to confirm
+- The enrollment dialog opens:
+  - **Device detection** shows whether USB or NFC is detected
+  - **Serial number** can be auto-read (USB) or typed manually (NFC / from key label)
+  - **PIN** is generated immediately and shown
+  - Click **Enroll** to:
+    1. Set PIN on the key
+    2. Create the FIDO2 credential on the key (touch USB key or hold NFC key on reader)
+    3. Register the credential with Entra ID
+    4. Optionally force PIN change
+  - A **PIN confirmation dialog** shows the PIN prominently - you must acknowledge before continuing
+- After enrollment the UPN field clears, ready for the next user
 
-### ✅ `EnrollFIDO2.ps1`
-- **Uses** the native Windows WebAuthn API (`webauthn.dll`)
-- **Prompts** the standard Windows security dialog for each credential
-- **Requires**:
-  - Waiting for the Windows dialog to appear
-  - **Manually entering the PIN**
-  - **Touching/tapping** the key to confirm
-- Fully integrated with Windows, but **slower and more repetitive** for bulk provisioning
+### 5. Wipe Keys (Optional)
+Click **Wipe Keys** to open the key management dialog:
+- **Remove from Entra ID** - lists all registered FIDO2 keys for the user with checkboxes; select and remove individual keys or all
+- **Reset physical key** - opens Windows Settings (Accounts > Sign-in options > Security key) for factory reset
 
-### ⚡ `EnrollFIDO2_fido2-cred.ps1`
-- **Uses** the external `fido2-cred` tool instead of the Windows API
-- **Writes credentials directly** to the key via command-line
-- **Requires only a touch or NFC tap** on the key—**no PIN dialog**
-- Much **faster and more efficient** for mass provisioning scenarios
+## NFC Enrollment Notes
 
----
+- `read_serial_t2.exe` (serial auto-read) only works over USB. For NFC keys, type the serial from the key's label or leave blank
+- `fido2-manage.exe` (PIN set/change) uses USB device numbering. If it fails over NFC, the PIN is passed directly to `fido2-cred2.exe` during credential creation
+- If the NFC key already has a PIN from a previous setup, you'll be prompted to enter the existing PIN
+- For brand new keys that need a PIN set: connect via USB first to set the PIN, then use NFC for enrollment. Or set the PIN as part of the NFC enrollment (the tool will attempt this automatically)
 
-### Summary
+## Configuration
 
-- Use **`EnrollFIDO2.ps1`** if you need native Windows WebAuthn integration  
-- Use **`EnrollFIDO2_fido2-cred.ps1`** if you want a faster, PIN-less flow with minimal interaction
- 
+Settings are saved to `%APPDATA%\FIDO2BulkEnroll\config.json`:
+- Tenant ID
+- PIN options (random, length, force change, clipboard, default PIN)
+- Log file path and enabled state
 
+Settings persist between sessions and are saved automatically when closing the tool.
 
+## Log File Format
+
+When logging is enabled, enrollments are saved as CSV:
+```
+UPN,Serial Number,PIN,ForcePINChange
+john.doe@domain.com,T2-123456,789012,True
+jane.smith@domain.com,FIDO2Key,456789,False
+```
+
+Handle this file carefully as it contains PINs.
 
 ## Troubleshooting
 
-- **No Serial Number Detected**: Ensure the FIDO key is connected properly and try again. Only PIN+ series keys support serial number retrieval.
-- **Error Connecting to Graph API**: Verify the Tenant ID and ensure the necessary permissions are assigned.
-- **Tool Doesn't Launch**: Confirm required modules are installed and run the script with appropriate permissions.
-- **Tool fails setting the PIN**: On PIN+ Octo Devices, due to the mininum PIN length of 8 digits, the automatic PIN Generation will fail. you can change the non random PIN in the script by changing the sample PIN in the first line to any PIN of your liking, beware of the other [PIN+ rules](https://www.token2.swiss/site/page/token2-fido2-pin-see-the-pin-complexity-in-action).
+- **Authentication fails (elevated PowerShell)**: The "Use device code login" checkbox should be auto-checked. Device code flow bypasses WAM which is broken in elevated sessions
+- **"Unable to find type" errors**: Ensure `DSInternals.PassKeys` module is installed. The tool imports it automatically but a restart may help after first install
+- **NFC key not detected**: Ensure the key is on the reader when clicking Enroll. The device detection runs on dialog open; if you place the key after, enrollment still works as `fido2-cred2.exe` detects devices at enrollment time
+- **FIDO_ERR_PIN_INVALID**: The key already has a PIN that doesn't match. Enter the existing PIN when prompted, or factory reset the key via Windows Settings
+- **Force PIN change fails**: The key doesn't support FIDO2.1 `forcePINChange` command. The enrollment still succeeds; the user keeps the assigned PIN
 
-## Contact
+## Credits
 
-For support, please [contact us](https://www.token2.swiss/contact) with: 
-- Error messages encountered during operation.
-- A copy of the log file (if applicable) for analysis.
+- CBOR encoding and CTAP credential creation based on [Token2 FIDO2 bulk enrollment scripts](https://github.com/niclas-eob/fido2_bulkenroll_entraid)
+- Base64URL encoding from [Posh-ACME](https://github.com/rmbolger/Posh-ACME) (MIT)
+- Graph API interaction adapted from [DSInternals.PassKeys](https://github.com/MichaelGrafnetter/webauthn-interop) (MIT)
 
----
+## License
 
-This project partially licensed under the [MIT License](LICENSE), except the **read_serial_t2.exe** utility.
-
-This project uses code sections from the Powershell version of [DSInternals.PassKeys](https://github.com/MichaelGrafnetter/webauthn-interop), under the MIT License for interactions with Microsoft Graph.
+This project is partially licensed under the [MIT License](LICENSE), except the `read_serial_t2.exe` utility.

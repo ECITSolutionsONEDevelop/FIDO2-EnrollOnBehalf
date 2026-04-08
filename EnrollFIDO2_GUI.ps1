@@ -1148,7 +1148,7 @@ $script:IsConnected = $false
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "FIDO2 Bulk Enrollment - Entra ID"
-$form.Size = New-Object System.Drawing.Size(580, 710)
+$form.Size = New-Object System.Drawing.Size(580, 735)
 $form.StartPosition = "CenterScreen"
 $form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedSingle
 $form.MaximizeBox = $false
@@ -1299,9 +1299,10 @@ $grpUser.Controls.Add($lvResults)
 $grpOptions = New-Object System.Windows.Forms.GroupBox
 $grpOptions.Text = "PIN && Log Options"
 $grpOptions.Location = New-Object System.Drawing.Point(15, 445)
-$grpOptions.Size = New-Object System.Drawing.Size(535, 115)
+$grpOptions.Size = New-Object System.Drawing.Size(535, 140)
 $form.Controls.Add($grpOptions)
 
+# Row 1: Random PIN + Length
 $chkRandomPin = New-Object System.Windows.Forms.CheckBox
 $chkRandomPin.Text = "Generate random PIN"
 $chkRandomPin.Location = New-Object System.Drawing.Point(12, 22)
@@ -1310,43 +1311,45 @@ $grpOptions.Controls.Add($chkRandomPin)
 
 $lblPinLength = New-Object System.Windows.Forms.Label
 $lblPinLength.Text = "Length:"
-$lblPinLength.Location = New-Object System.Drawing.Point(170, 24)
+$lblPinLength.Location = New-Object System.Drawing.Point(175, 24)
 $lblPinLength.AutoSize = $true
 $lblPinLength.ForeColor = [System.Drawing.Color]::FromArgb(85, 85, 85)
 $grpOptions.Controls.Add($lblPinLength)
 
 $nudPinLength = New-Object System.Windows.Forms.NumericUpDown
-$nudPinLength.Location = New-Object System.Drawing.Point(220, 21)
+$nudPinLength.Location = New-Object System.Drawing.Point(225, 21)
 $nudPinLength.Size = New-Object System.Drawing.Size(50, 23)
 $nudPinLength.Minimum = 4
 $nudPinLength.Maximum = 12
 $nudPinLength.Value = 6
 $grpOptions.Controls.Add($nudPinLength)
 
-$chkForcePinChange = New-Object System.Windows.Forms.CheckBox
-$chkForcePinChange.Text = "Force PIN change on first use (FIDO2.1 keys only)"
-$chkForcePinChange.Location = New-Object System.Drawing.Point(290, 22)
-$chkForcePinChange.AutoSize = $true
-$grpOptions.Controls.Add($chkForcePinChange)
-
-$chkCopyClipboard = New-Object System.Windows.Forms.CheckBox
-$chkCopyClipboard.Text = "Copy PIN to clipboard"
-$chkCopyClipboard.Location = New-Object System.Drawing.Point(12, 48)
-$chkCopyClipboard.AutoSize = $true
-$grpOptions.Controls.Add($chkCopyClipboard)
-
 $lblSamplePin = New-Object System.Windows.Forms.Label
-$lblSamplePin.Text = "Default PIN:"
-$lblSamplePin.Location = New-Object System.Drawing.Point(250, 50)
+$lblSamplePin.Text = "Default PIN (when random off):"
+$lblSamplePin.Location = New-Object System.Drawing.Point(295, 24)
 $lblSamplePin.AutoSize = $true
 $lblSamplePin.ForeColor = [System.Drawing.Color]::FromArgb(85, 85, 85)
 $grpOptions.Controls.Add($lblSamplePin)
 
 $txtSamplePin = New-Object System.Windows.Forms.TextBox
-$txtSamplePin.Location = New-Object System.Drawing.Point(330, 47)
-$txtSamplePin.Width = 90
+$txtSamplePin.Location = New-Object System.Drawing.Point(462, 21)
+$txtSamplePin.Width = 60
 $grpOptions.Controls.Add($txtSamplePin)
 
+# Row 2: Copy to clipboard + Force PIN change
+$chkCopyClipboard = New-Object System.Windows.Forms.CheckBox
+$chkCopyClipboard.Text = "Copy PIN to clipboard"
+$chkCopyClipboard.Location = New-Object System.Drawing.Point(12, 50)
+$chkCopyClipboard.AutoSize = $true
+$grpOptions.Controls.Add($chkCopyClipboard)
+
+$chkForcePinChange = New-Object System.Windows.Forms.CheckBox
+$chkForcePinChange.Text = "Force PIN change on first use (FIDO2.1 keys only)"
+$chkForcePinChange.Location = New-Object System.Drawing.Point(195, 50)
+$chkForcePinChange.AutoSize = $true
+$grpOptions.Controls.Add($chkForcePinChange)
+
+# Row 3: Log file
 $chkEnableLog = New-Object System.Windows.Forms.CheckBox
 $chkEnableLog.Text = "Log File:"
 $chkEnableLog.Location = New-Object System.Drawing.Point(12, 80)
@@ -1355,14 +1358,14 @@ $grpOptions.Controls.Add($chkEnableLog)
 
 $txtLogPath = New-Object System.Windows.Forms.TextBox
 $txtLogPath.Location = New-Object System.Drawing.Point(100, 79)
-$txtLogPath.Width = 335
+$txtLogPath.Width = 345
 $txtLogPath.Enabled = $false
 $grpOptions.Controls.Add($txtLogPath)
 
 $btnBrowseLog = New-Object System.Windows.Forms.Button
 $btnBrowseLog.Text = "Browse..."
-$btnBrowseLog.Location = New-Object System.Drawing.Point(443, 77)
-$btnBrowseLog.Size = New-Object System.Drawing.Size(78, 26)
+$btnBrowseLog.Location = New-Object System.Drawing.Point(453, 77)
+$btnBrowseLog.Size = New-Object System.Drawing.Size(70, 26)
 $btnBrowseLog.Enabled = $false
 $grpOptions.Controls.Add($btnBrowseLog)
 
@@ -1378,7 +1381,7 @@ $chkEnableLog.Add_CheckedChanged({
 $btnEnrollKey = New-Object System.Windows.Forms.Button
 $btnEnrollKey.Text = "Enroll Key"
 $btnEnrollKey.Font = New-Object System.Drawing.Font("Segoe UI", 13, [System.Drawing.FontStyle]::Bold)
-$btnEnrollKey.Location = New-Object System.Drawing.Point(15, 568)
+$btnEnrollKey.Location = New-Object System.Drawing.Point(15, 593)
 $btnEnrollKey.Size = New-Object System.Drawing.Size(390, 44)
 $btnEnrollKey.Enabled = $false
 $form.Controls.Add($btnEnrollKey)
@@ -1386,7 +1389,7 @@ $form.Controls.Add($btnEnrollKey)
 $btnWipeKeys = New-Object System.Windows.Forms.Button
 $btnWipeKeys.Text = "Wipe Keys"
 $btnWipeKeys.Font = New-Object System.Drawing.Font("Segoe UI", 10)
-$btnWipeKeys.Location = New-Object System.Drawing.Point(415, 568)
+$btnWipeKeys.Location = New-Object System.Drawing.Point(415, 593)
 $btnWipeKeys.Size = New-Object System.Drawing.Size(135, 44)
 $btnWipeKeys.ForeColor = [System.Drawing.Color]::DarkRed
 $btnWipeKeys.Enabled = $false
@@ -1397,7 +1400,7 @@ $lblConfigPath = New-Object System.Windows.Forms.Label
 $lblConfigPath.Text = "Config: $($script:ConfigPath)"
 $lblConfigPath.Font = New-Object System.Drawing.Font("Segoe UI", 8)
 $lblConfigPath.ForeColor = [System.Drawing.Color]::FromArgb(150, 150, 150)
-$lblConfigPath.Location = New-Object System.Drawing.Point(15, 620)
+$lblConfigPath.Location = New-Object System.Drawing.Point(15, 645)
 $lblConfigPath.AutoSize = $true
 $form.Controls.Add($lblConfigPath)
 
