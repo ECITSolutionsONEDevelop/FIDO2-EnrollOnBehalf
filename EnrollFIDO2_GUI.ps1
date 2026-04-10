@@ -1325,15 +1325,16 @@ $nudPinLength.Value = 6
 $grpOptions.Controls.Add($nudPinLength)
 
 $lblSamplePin = New-Object System.Windows.Forms.Label
-$lblSamplePin.Text = "Default PIN (when random off):"
+$lblSamplePin.Text = "Default PIN:"
 $lblSamplePin.Location = New-Object System.Drawing.Point(295, 24)
 $lblSamplePin.AutoSize = $true
 $lblSamplePin.ForeColor = [System.Drawing.Color]::FromArgb(85, 85, 85)
 $grpOptions.Controls.Add($lblSamplePin)
 
 $txtSamplePin = New-Object System.Windows.Forms.TextBox
-$txtSamplePin.Location = New-Object System.Drawing.Point(462, 21)
-$txtSamplePin.Width = 60
+$txtSamplePin.Location = New-Object System.Drawing.Point(375, 21)
+$txtSamplePin.Width = 145
+$txtSamplePin.Padding = New-Object System.Windows.Forms.Padding(2, 0, 0, 0)
 $grpOptions.Controls.Add($txtSamplePin)
 
 # Row 2: Copy to clipboard + Force PIN change
